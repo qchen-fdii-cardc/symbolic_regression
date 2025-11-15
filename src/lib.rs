@@ -117,6 +117,11 @@ impl Expr {
                         Box::new(*a.clone()),
                         Box::new(Expr::Constant(-c)),
                     ),
+                    ("+", _, Expr::Constant(c)) if *c < 0.0_f64 => Expr::Binary(
+                        BINARY_OPS[1], // +
+                        Box::new(*a.clone()),
+                        Box::new(Expr::Constant(-c)),
+                    ),
                     _ => simplified,
                 }
             }
@@ -190,6 +195,18 @@ pub fn fitness(expr: &Expr, data: &[(f64, f64)]) -> f64 {
     mse / data.len() as f64
 }
 
+pub fn fitness_max_abs(expr: &Expr, data: &[(f64, f64)]) -> f64 {
+    let mut max_abs_error = 0.0;
+    for (x, y_true) in data {
+        let y_pred = expr.evaluate(*x);
+        let abs_error = (y_true - y_pred).abs();
+        if abs_error > max_abs_error {
+            max_abs_error = abs_error;
+        }
+    }
+    max_abs_error
+}
+
 pub fn crossover(parent1: &Expr, parent2: &Expr) -> Expr {
     let mut rng = rand::thread_rng();
     let mut p1 = parent1.clone();
@@ -238,4 +255,25 @@ pub fn mutate(expr: &Expr) -> Expr {
         _ => {}
     }
     new_expr
+}
+
+
+pub fn print_expr_as_tree(expr: &Expr, indent: usize) {
+    print!("|");
+    for _ in 0..indent {
+        print!("-");
+    }
+    match expr {
+        Expr::Constant(c) => println!("Constant({:.2})", c),
+        Expr::Variable(v) => println!("Variable({})", v),
+        Expr::Unary(op, a) => {
+            println!("Unary({})", op.name);
+            print_expr_as_tree(a, indent + 1);
+        }
+        Expr::Binary(op, a, b) => {
+            println!("Binary({})", op.name);
+            print_expr_as_tree(a, indent + 4);
+            print_expr_as_tree(b, indent + 4);
+        }
+    }
 }

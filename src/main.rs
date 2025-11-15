@@ -2,6 +2,7 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 use symbolic_regression::*;
 
+
 fn main() {
     // Target function: y = x^2 + x + 1
     let target_fn = |x: f64| x.powi(2) + x + 1.0 + x * x.cos();
@@ -12,11 +13,11 @@ fn main() {
         })
         .collect();
 
-    let population_size = 100;
-    let generations = 5000;
-    let elite_size = 5;
-    let mutation_rate = 0.3;
-    let simpify_rate = 0.5;
+    let population_size = 50;
+    let generations = 10000;
+    let elite_size = 15;
+    let mutation_rate = 0.5;
+    let simpify_rate = 0.8;
 
     let mut population: Vec<Expr> = (0..population_size)
         .map(|_| generate_random_expr(3))
@@ -65,9 +66,9 @@ fn main() {
             let mut offspring = crossover(parent1, parent2);
             if rng.gen_bool(mutation_rate) {
                 offspring = mutate(&offspring);
-                if rng.gen_bool(simpify_rate) {
-                    offspring = offspring.simplify();
-                }
+            }
+            if rng.gen_bool(simpify_rate) {
+                offspring = offspring.simplify();
             }
             new_population.push(offspring);
         }
@@ -85,4 +86,5 @@ fn main() {
         final_scores[0].1.simplify().to_string()
     );
     println!("Final fitness: {:.4}", final_scores[0].0);
+    print_expr_as_tree(&final_scores[0].1.simplify(), 0);
 }
